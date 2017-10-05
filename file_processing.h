@@ -1,7 +1,9 @@
 #ifndef FILE_PROCESSING_H_   /* Include guard */
 #define FILE_PROCESSING_H_
 
-/* 
+#include <stdio.h>
+
+/*
 	history file basic functions' prototypes
 */
 void open_history_file();

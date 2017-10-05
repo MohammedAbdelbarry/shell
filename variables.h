@@ -9,12 +9,12 @@
 	  performance is not an issue since in practice we expect low number of variables,
 	  as a tip: simple array lookup would be fine
 */
-const char* lookup_variable( const char* key );  
+const char *lookup_variable(char *key);
 
 /*
 	- This function should be responsible for setting the value of a variable
 */
-void set_variable( const char* key , const char* value );
+void set_variable(char *key, char *value);
 
 
 /*
@@ -22,6 +22,6 @@ void set_variable( const char* key , const char* value );
 	- This is a helper function to print all your variables
 	- Might help much in the debugging or testing
 */
-void print_all_variables( void );
+void print_all_variables(void);
 
 #endif // VARIABLES_H_

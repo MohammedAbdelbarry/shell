@@ -1,6 +1,6 @@
 #ifndef COMMAND_PARSER_H   /* Include guard */
 #define COMMAND_PARSER_H
-
+#include "command.h"
 /* 
 	- This function should be responsible for importing all details of the command 
 	- Should specify the type of the command "comment, cd, echo, expression - X=5 -, else"
@@ -13,7 +13,7 @@
 	- Best practice is to use helper function for each collection of logical instructions,
 	  example: function for splitting the command by space into array of strings, ..etc
 */
-void parse_command( const char* command );  
+struct Command parse_command(char *command);
 
 
 #endif // COMMAND_PARSER_H

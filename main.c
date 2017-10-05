@@ -1,16 +1,42 @@
+#include "environment.h"
+#include "variables.h"
+#include "commands.h"
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+//#include <unistd.h>
+//#include <stdlib.h>
+//#include "strutil.h"
 
-typedef enum{ false = 0 , true = 1 } bool ;
-
-void start_shell(bool read_from_file);
+void start(bool read_from_file);
 void shell_loop(bool input_from_file);
 
 int main(int argc, char *argv[])
 {
-
+	/*char* s = NULL;
+    size_t buf_size = 512;
+	while (true) {
+        int num = getline(&s, &buf_size, stdin);
+		char** argv = shellSplit(s);
+        if (argv == NULL) {
+            printf("Err");
+        } else {
+            int i = 0;
+            while(*(argv + i) != NULL) {
+                printf("%s ", *(argv + i));
+                i++;
+            }
+        }
+        printf("\n");
+        pid_t pid = fork();
+        if (pid == 0) {
+            execvp(argv[0], argv);
+            printf("ERROR");
+            abort();
+    }*/
     setup_environment();
-
+    print_all_variables();
     // any other early configuration should be here
-
     if( argc > 1 ){
         start(true);
     }
