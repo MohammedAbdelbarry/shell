@@ -6,6 +6,7 @@
 #include <asm/errno.h>
 #include <errno.h>
 #include <string.h>
+#include <stdlib.h>
 
 void cd(char* path)
 {
@@ -16,7 +17,9 @@ void cd(char* path)
     if (dir != NULL) {
         // Directory exists
         closedir(dir);
-        set_variable("PWD", path);
+        char real_path[PATH_MAX];
+        realpath(path, real_path);
+        set_variable("PWD", real_path);
         chdir(path);
     } else if (ENOENT == errno) {
         // Directory does not exist
@@ -28,7 +31,19 @@ void cd(char* path)
 }  
 
 
-void echo( const char* message )
-{
-	printf("%s\n", message);
+void echo(struct Command command) {
+    for (int i = 1 ; i < command.argc ; i++) {
+        printf("%s ", command.argv[i]);
+    }
+    printf("\n");
+}
+
+void execute_cd(struct Command command) {
+    if (command.argc == 2) {
+        cd(command.argv[1]);
+    } else if (command.argc == 1) {
+        cd("");
+    } else {
+        printf("cd: invalid number of arguments\n");
+    }
 }

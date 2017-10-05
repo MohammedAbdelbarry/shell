@@ -9,6 +9,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <errno.h>
+#include <string.h>
 //#include <stdlib.h>
 //#include "strutil.h"
 
@@ -66,31 +68,27 @@ void execute_program(struct Command command) {
     pid_t pid = fork();
     if (pid == 0) {
         execvp(command.argv[0], command.argv);
-        printf("ERROR");
+        printf("%s: command not found: %s\n", SHELL_NAME, command.argv[0]);
         abort();
     } else if (pid > 0) {
         if (!command.isBackground) {
+             printf("NOT BACKGROUND\n");
              wait(0);
         }
     }
 }
 
-void execute_cd(struct Command command) {
-    if (command.argc == 2) {
-        cd(command.argv[1]);
-        printf("%s\n", command.argv[1]);
-    } else if (command.argc == 1) {
-        cd("");
-    } else {
-        printf("cd: invalid number of arguments\n");
+void execute_assignment(struct Command command) {
+    char temp[512];
+    strcpy(temp, command.argv[0]);
+    size_t len = strlen(temp);
+    for (int i = 1 ; i < len - 1 ; i++) {
+        if (temp[i] == '=') {
+            temp[i] = '\0';
+            set_variable(temp, temp + i + 1);
+            break;
+        }
     }
-}
-
-void execute_echo(struct Command command) {
-    for (int i = 1 ; i < command.argc ; i++) {
-        printf("%s ", command.argv[i]);
-    }
-    printf("\n");
 }
 
 void shell_loop(bool input_from_file)
@@ -123,14 +121,18 @@ void shell_loop(bool input_from_file)
                 break;
             case CD:
                 execute_cd(parsedCommand);
+                break;
             case ECHO:
-                execute_echo(parsedCommand);
+                echo(parsedCommand);
+                break;
+            case EXPRESSION:
+                execute_assignment(parsedCommand);
+                break;
             case COMMENT:
             default:
                 break;
         }
-        //free(line);
-        //free(parsedCommand.argv);
+        free(parsedCommand.argv);
 		/*
 			you don't need to write all logic here, a better practice is to call functions,
 			each one contains a coherent set of logical instructions
