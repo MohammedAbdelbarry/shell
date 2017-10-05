@@ -47,3 +47,8 @@ void execute_cd(struct Command command) {
         printf("cd: invalid number of arguments\n");
     }
 }
+
+void pwd() {
+    const char* pwd = lookup_variable("PWD");
+    printf("%s\n", pwd);
+}

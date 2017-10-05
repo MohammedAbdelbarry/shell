@@ -4,6 +4,7 @@
 #include "command.h"
 #include "command_parser.h"
 #include "constants.h"
+#include "strutil.h"
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,6 +12,7 @@
 #include <sys/wait.h>
 #include <errno.h>
 #include <string.h>
+#include <limits.h>
 //#include <stdlib.h>
 //#include "strutil.h"
 
@@ -67,12 +69,22 @@ void start(bool read_from_file)
 void execute_program(struct Command command) {
     pid_t pid = fork();
     if (pid == 0) {
-        execvp(command.argv[0], command.argv);
+        const char *PATH = lookup_variable("PATH");
+        char **split_path = split(PATH, ":");
+        int counter = 0;
+        execv(command.argv[0], command.argv);
+        while(*(split_path + counter) != NULL) {
+            char file_path[PATH_MAX];
+            sprintf(file_path, "%s/%s", *(split_path + counter), command.argv[0]);
+            execv(file_path, command.argv);
+            if (errno == EACCES) {
+                printf("%s: permission denied: %s\n", SHELL_NAME, command.argv[0]);
+            }
+            counter++;
+        }
         printf("%s: command not found: %s\n", SHELL_NAME, command.argv[0]);
-        abort();
     } else if (pid > 0) {
         if (!command.isBackground) {
-             printf("NOT BACKGROUND\n");
              wait(0);
         }
     }
@@ -94,9 +106,10 @@ void execute_assignment(struct Command command) {
 void shell_loop(bool input_from_file)
 {
 	bool from_file = input_from_file;
-    char* line = NULL;
     size_t buf_size = 512;
     while(true){
+        char* line = NULL;
+        bool terminateLoop = false;
 		if(from_file){
 			//read next instruction from file
 
@@ -128,11 +141,21 @@ void shell_loop(bool input_from_file)
             case EXPRESSION:
                 execute_assignment(parsedCommand);
                 break;
+            case PWD:
+                pwd();
+                break;
+            case EXIT:
+                terminateLoop = true;
+                break;
             case COMMENT:
             default:
                 break;
         }
         free(parsedCommand.argv);
+        free(line);
+        if (terminateLoop) {
+            break;
+        }
 		/*
 			you don't need to write all logic here, a better practice is to call functions,
 			each one contains a coherent set of logical instructions

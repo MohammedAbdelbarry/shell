@@ -16,4 +16,5 @@ void echo(struct Command command);
 
 void execute_cd(struct Command command);
 
+void pwd();
 #endif // COMMANDS_H_

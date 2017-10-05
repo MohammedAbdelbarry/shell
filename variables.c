@@ -15,7 +15,7 @@ int numVariables = 0;
 const char *lookup_variable(char *key) {
     for (int i = 0; i < numVariables; ++i) {
         if (strcmp(variables[i].key, key) == 0) {
-            return variables[i].value;
+            return strdup(variables[i].value);
         }
     }
     return NULL;

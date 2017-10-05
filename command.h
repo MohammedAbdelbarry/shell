@@ -7,7 +7,8 @@ enum CommandType {
     PWD,
     COMMENT,
     EXPRESSION,
-    PROGRAM
+    PROGRAM,
+    EXIT
 };
 struct Command {
     char* command;

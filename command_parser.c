@@ -95,6 +95,8 @@ struct Command parse_command(char *command) {
         parsedCommand.type = ECHO;
     } else if (strcmp(argv[0], "pwd") == 0) {
         parsedCommand.type = PWD;
+    } else if (strcmp(argv[0], "exit") == 0) {
+        parsedCommand.type = EXIT;
     } else if (parsedCommand.argc == 1) {
         if (isAssignment(argv[0])) {
             parsedCommand.type = EXPRESSION;

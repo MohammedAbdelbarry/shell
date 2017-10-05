@@ -1,8 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
-#include <stdbool.h>
 
-char** split(char* line, const char* tokenDelimiter) {
+char** split(const char* line, const char* tokenDelimiter) {
     int buf_size = 32;
     char** argv = (char**) malloc(buf_size * sizeof(char*));
     if (argv == NULL) {
@@ -12,7 +11,6 @@ char** split(char* line, const char* tokenDelimiter) {
     char* token = strtok(line, tokenDelimiter);
     while (token != NULL) {
         argv[argc++] = token;
-        //if (ignore_quotes && )
         token = strtok(NULL, tokenDelimiter);
         if (argc >= buf_size) {
             buf_size *= 2;
