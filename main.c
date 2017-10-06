@@ -5,6 +5,7 @@
 #include "command_parser.h"
 #include "constants.h"
 #include "strutil.h"
+#include "file_processing.h"
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -38,6 +39,7 @@ int main(int argc, char *argv[])
         printf("\n");
         */
     setup_environment();
+    open_history_file();
     // any other early configuration should be here
     if( argc > 1 ){
         start(true);
@@ -45,7 +47,7 @@ int main(int argc, char *argv[])
     else{
         start(false);
     }
-
+    close_history_file();
     return 0;
 }
 
@@ -83,6 +85,7 @@ void execute_program(struct Command command) {
             counter++;
         }
         printf("%s: command not found: %s\n", SHELL_NAME, command.argv[0]);
+        abort();
     } else if (pid > 0) {
         if (!command.isBackground) {
              wait(0);
@@ -144,12 +147,18 @@ void shell_loop(bool input_from_file)
             case PWD:
                 pwd();
                 break;
+            case HISTORY:
+                history();
+                break;
             case EXIT:
                 terminateLoop = true;
                 break;
             case COMMENT:
             default:
                 break;
+        }
+        if (parsedCommand.type != COMMENT) {
+            fputline(get_history_file(), line);
         }
         free(parsedCommand.argv);
         free(line);

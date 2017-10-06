@@ -97,6 +97,8 @@ struct Command parse_command(char *command) {
         parsedCommand.type = PWD;
     } else if (strcmp(argv[0], "exit") == 0) {
         parsedCommand.type = EXIT;
+    } else if (strcmp(argv[0], "history") == 0) {
+        parsedCommand.type = HISTORY;
     } else if (parsedCommand.argc == 1) {
         if (isAssignment(argv[0])) {
             parsedCommand.type = EXPRESSION;

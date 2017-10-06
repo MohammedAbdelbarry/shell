@@ -1,5 +1,6 @@
 #include "commands.h"
 #include "variables.h"
+#include "file_processing.h"
 #include <unistd.h>
 #include <stdio.h>
 #include <dirent.h>
@@ -51,4 +52,16 @@ void execute_cd(struct Command command) {
 void pwd() {
     const char* pwd = lookup_variable("PWD");
     printf("%s\n", pwd);
+}
+
+void history() {
+    int ret = 0;
+    char* line;
+    int counter = 1;
+    do {
+        ret = getline(line, 512, get_history_file());
+
+        printf("\t%d\t%s", counter++, line);
+    } while(ret != -1);
+    free(line);
 }

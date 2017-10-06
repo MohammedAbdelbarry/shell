@@ -8,7 +8,8 @@ enum CommandType {
     COMMENT,
     EXPRESSION,
     PROGRAM,
-    EXIT
+    EXIT,
+    HISTORY
 };
 struct Command {
     char* command;

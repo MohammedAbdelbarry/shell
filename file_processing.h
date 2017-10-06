@@ -24,5 +24,8 @@ void open_commands_batch_file();
 FILE* get_commands_batch_file();
 void close_commands_batch_file();
 
-
+/**
+ * File Manipulation.
+ */
+void fputline(FILE* file, char* line);
 #endif // FILE_PROCESSING_H_
