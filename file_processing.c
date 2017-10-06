@@ -1,5 +1,4 @@
 #include <string.h>
-#include <limits.h>
 #include <stdlib.h>
 #include "file_processing.h"
 #include "variables.h"
@@ -8,14 +7,14 @@
 /* 
 	history file section
 */
-FILE* history_file;
-FILE* log_file;
+FILE *history_file;
+FILE *log_file;
 
 void open_history_file() {
     char *shell_home = lookup_variable("SHELL_HOME");
     char *history_path = "/.history";
     size_t buffer_len = strlen(shell_home) + strlen(history_path) + 1;
-    char *buffer = (char*) malloc(buffer_len * sizeof(char*));
+    char *buffer = (char *) malloc(buffer_len * sizeof(char));
     strcpy(buffer, shell_home);
     strcat(buffer, history_path);
     history_file = fopen(buffer, "a+");
@@ -23,57 +22,51 @@ void open_history_file() {
     free(shell_home);
 }
 
-FILE* get_history_file()
-{
-	return history_file;
+FILE *get_history_file() {
+    return history_file;
 }
 
-void close_history_file()
-{
-	fclose(history_file);
+void close_history_file() {
+    fclose(history_file);
 }
 
 
 /* 
 	log file section
 */
-void open_log_file()
-{
+void open_log_file() {
     log_file = fopen(strcat(lookup_variable("SHELL_HOME"), "/shell.log"), "a+");
 }
 
-FILE* get_log_file()
-{
-	return log_file;
+FILE *get_log_file() {
+    return log_file;
 }
 
-void close_log_file()
-{
-	fclose(log_file);
+void close_log_file() {
+    fclose(log_file);
 }
 
 
 /* 
 	CommandsBatch file section
 */
-void open_commands_batch_file()
-{
-	// you should implement this function
+void open_commands_batch_file(const char* file_path) {
+    // you should implement this function
 }
 
-FILE* get_commands_batch_file()
-{
-	// you should implement this function
+FILE *get_commands_batch_file() {
+    // you should implement this function
 }
 
-void close_commands_batch_file()
-{
-	// you should implement this function
+void close_commands_batch_file() {
+    // you should implement this function
 }
 
-void fputline(FILE* file, char* line) {
+void fputline(FILE *file, char *line) {
     if (file == NULL) {
         fprintf(stderr, "%s: failed to write to history file", SHELL_NAME);
     }
+    static int count = 0;
     fprintf(file, "%s\n", line);
+    //printf("%d - %s\n", count++, line);
 }

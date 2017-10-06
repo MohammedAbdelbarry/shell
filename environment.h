@@ -9,6 +9,6 @@
 	- You also need to store the path of the directory containing this project into a variable, 
 	  you'll need it in printning the history & log into a files beside your executable file
 */
-void setup_environment( void );  
+void setup_environment(void);
 
 #endif // ENVIRONMENT_H_

@@ -1,7 +1,9 @@
 #ifndef COMMAND_PARSER_H   /* Include guard */
 #define COMMAND_PARSER_H
+
 #include "command.h"
-/* 
+
+/*
 	- This function should be responsible for importing all details of the command 
 	- Should specify the type of the command "comment, cd, echo, expression - X=5 -, else"
 	- Should specify the arguments of the command

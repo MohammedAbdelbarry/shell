@@ -4,6 +4,9 @@
 
 #ifndef SHELL_STRUTIL_H
 #define SHELL_STRUTIL_H
-char** shellSplit(char *line);
-char** split(const char *line, const char *tokenDelimiter);
+
+char **shellSplit(char *line);
+
+char **split(const char *line, const char *tokenDelimiter);
+
 #endif //SHELL_STRUTIL_H

@@ -1,4 +1,5 @@
 #include <stdbool.h>
+
 #ifndef SHELL_COMMAND_H
 #define SHELL_COMMAND_H
 enum CommandType {
@@ -12,10 +13,10 @@ enum CommandType {
     HISTORY
 };
 struct Command {
-    char* command;
+    char *command;
     int argc;
-    char** argv;
+    char **argv;
     bool isBackground;
-    enum CommandType  type;
+    enum CommandType type;
 };
 #endif //SHELL_COMMAND_H

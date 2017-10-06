@@ -1,20 +1,19 @@
 #include "commands.h"
 #include "variables.h"
 #include "file_processing.h"
+#include "constants.h"
 #include <unistd.h>
-#include <stdio.h>
 #include <dirent.h>
 #include <asm/errno.h>
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
 
-void cd(char* path)
-{
+void cd(char *path) {
     if (strlen(path) == 0) {
         path = lookup_variable("HOME");
     }
-    DIR* dir = opendir(path);
+    DIR *dir = opendir(path);
     if (dir != NULL) {
         // Directory exists
         closedir(dir);
@@ -29,11 +28,11 @@ void cd(char* path)
         // Failed to open directory
         printf("cd: failed to change directory\n");
     }
-}  
+}
 
 
 void echo(struct Command command) {
-    for (int i = 1 ; i < command.argc ; i++) {
+    for (int i = 1; i < command.argc; i++) {
         printf("%s ", command.argv[i]);
     }
     printf("\n");
@@ -50,18 +49,16 @@ void execute_cd(struct Command command) {
 }
 
 void pwd() {
-    const char* pwd = lookup_variable("PWD");
+    const char *pwd = lookup_variable("PWD");
     printf("%s\n", pwd);
 }
 
 void history() {
-    int ret = 0;
-    char* line;
+    rewind(get_history_file());
+    char *line = (char *) malloc((BUF_SIZE + 1) * sizeof(char));
     int counter = 1;
-    do {
-        ret = getline(line, 512, get_history_file());
-
+    while (fgets(line, BUF_SIZE, get_history_file()) != NULL) {
         printf("\t%d\t%s", counter++, line);
-    } while(ret != -1);
+    }
     free(line);
 }
