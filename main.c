@@ -39,6 +39,15 @@ int main(int argc, char *argv[]) {
     open_history_file();
     // any other early configuration should be here
     if (argc > 1) {
+        if (argc > 2) {
+            printf("%s: error, too many arguments\n", SHELL_NAME);
+            return 1;
+        }
+        open_commands_batch_file(argv[1]);
+        if (get_commands_batch_file() == NULL) {
+            printf("%s: error, batch file not found\n", SHELL_NAME);
+            return 404;
+        }
         start(true);
     } else {
         start(false);
@@ -123,7 +132,9 @@ void shell_loop(bool input_from_file) {
             break;
         }
         line[strlen(line) - 1] = '\0';
-
+        if (from_file) {
+            printf("%s\n", line);
+        }
         //parse your command here
         struct Command parsedCommand = parse_command(line);
         //execute your command here

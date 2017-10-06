@@ -9,6 +9,7 @@
 */
 FILE *history_file;
 FILE *log_file;
+FILE *batch_file;
 
 void open_history_file() {
     char *shell_home = lookup_variable("SHELL_HOME");
@@ -51,15 +52,15 @@ void close_log_file() {
 	CommandsBatch file section
 */
 void open_commands_batch_file(const char* file_path) {
-    // you should implement this function
+    batch_file = fopen(file_path, "r");
 }
 
 FILE *get_commands_batch_file() {
-    // you should implement this function
+    return batch_file;
 }
 
 void close_commands_batch_file() {
-    // you should implement this function
+    fclose(batch_file);
 }
 
 void fputline(FILE *file, char *line) {
@@ -68,5 +69,4 @@ void fputline(FILE *file, char *line) {
     }
     static int count = 0;
     fprintf(file, "%s\n", line);
-    //printf("%d - %s\n", count++, line);
 }
