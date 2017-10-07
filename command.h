@@ -10,7 +10,9 @@ enum CommandType {
     EXPRESSION,
     PROGRAM,
     EXIT,
-    HISTORY
+    HISTORY,
+    EXPORT,
+    PRINTENV
 };
 struct Command {
     char *command;

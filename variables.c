@@ -17,19 +17,30 @@ const char *lookup_variable(char *key) {
             return strdup(variables[i].value);
         }
     }
-    return NULL;
+    return getenv(key);
 }
 
-void set_variable(char *key, char *value) {
+void set_variable(char *key, char *value, bool export) {
+    bool found = false;
+    bool env_found = getenv(key) != NULL;
+    if (env_found) {
+        setenv(key, value, true);
+    }
     for (int i = 0; i < numVariables; ++i) {
         if (strcmp(variables[i].key, key) == 0) {
             variables[i].value = strdup(value);
-            return;
+            found = true;
         }
     }
-    variables[numVariables].key = strdup(key);
-    variables[numVariables].value = strdup(value);
-    numVariables++;
+    if (export && !env_found) {
+        setenv(key, value, true);
+    } else if (!found) {
+        getenv(key) != NULL;
+        variables[numVariables].key = strdup(key);
+        variables[numVariables].value = strdup(value);
+        numVariables++;
+
+    }
     return;
 }
 

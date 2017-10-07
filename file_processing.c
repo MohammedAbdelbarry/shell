@@ -51,7 +51,7 @@ void close_log_file() {
 /* 
 	CommandsBatch file section
 */
-void open_commands_batch_file(const char* file_path) {
+void open_commands_batch_file(const char *file_path) {
     batch_file = fopen(file_path, "r");
 }
 

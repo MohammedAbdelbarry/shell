@@ -20,4 +20,6 @@ void pwd();
 
 void history();
 
+void printenv(struct Command command);
+
 #endif // COMMANDS_H_

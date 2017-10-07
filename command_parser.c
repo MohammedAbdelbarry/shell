@@ -36,7 +36,7 @@ struct Command parse_command(char *command) {
     parsedCommand.type = COMMENT;
     // pre processing
     size_t commandLen = strlen(command);
-    for (int i = 0; i < commandLen; i++) {
+    for (unsigned int i = 0; i < commandLen; i++) {
         if (command[i] == COMMENT_CHAR) {
             command[i] = '\0';
             commandLen = i;
@@ -87,6 +87,11 @@ struct Command parse_command(char *command) {
         parsedCommand.type = EXIT;
     } else if (strcmp(parsedCommand.argv[0], "history") == 0) {
         parsedCommand.type = HISTORY;
+    } else if ((strcmp(parsedCommand.argv[0], "printenv") == 0) ||
+            (strcmp(parsedCommand.argv[0], "env") == 0 && parsedCommand.argc == 1)) {
+        parsedCommand.type = PRINTENV;
+    } else if (strcmp(parsedCommand.argv[0], "export") == 0) {
+        parsedCommand.type = EXPORT;
     } else if (parsedCommand.argc == 1) {
         if (isAssignment(parsedCommand.argv[0])) {
             parsedCommand.type = EXPRESSION;

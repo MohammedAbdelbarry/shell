@@ -10,7 +10,6 @@
 #include <sys/wait.h>
 #include <errno.h>
 #include <string.h>
-#include <limits.h>
 //#include <stdlib.h>
 //#include "strutil.h"
 
@@ -18,23 +17,9 @@ void start(bool read_from_file);
 
 void shell_loop(bool input_from_file);
 
+void sigchld_handler(int sig);
+
 int main(int argc, char *argv[]) {
-    /*char* s = NULL;
-    size_t buf_size = 512;
-    while (true) {
-        int num = getline(&s, &buf_size, stdin);
-        char** argv = shellSplit(s);
-        if (argv == NULL) {
-            printf("Err");
-        } else {
-            int i = 0;
-            while(*(argv + i) != NULL) {
-                printf("%s ", *(argv + i));
-                i++;
-            }
-        }
-        printf("\n");
-        */
     setup_environment();
     open_history_file();
     // any other early configuration should be here
@@ -56,15 +41,19 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
+void sigchld_handler(int sig) {
+    pid_t pid;
+    pid = wait(0);
+    printf("%s: child %d done.\n", SHELL_NAME, pid);
+    fflush(stdout);
+}
+
+
 void start(bool read_from_file) {
     cd(""); // let shell starts from home
-    /*print_all_variables();
-    char cwd[512];
-    char* str = getcwd(cwd, 512);
-    printf("CWD=%s\n", str);*/
+
     if (read_from_file) {
         // file processing functions should be called from here
-
         shell_loop(true);
     } else {
         shell_loop(false);
@@ -72,16 +61,21 @@ void start(bool read_from_file) {
 }
 
 void execute_program(struct Command command) {
+    signal(SIGCHLD, SIG_DFL);
     fflush(get_history_file());
+    fflush(stdin);
     pid_t pid = fork();
     if (pid == 0) {
+        if (command.isBackground) {
+
+        }
         const char *PATH = lookup_variable("PATH");
-        char **split_path = split(PATH, ":");
+        char **split_path = split(PATH, ":", false);
         int counter = 0;
         execv(command.argv[0], command.argv);
-        while (*(split_path + counter) != NULL) {
-            char file_path[PATH_MAX];
-            sprintf(file_path, "%s/%s", *(split_path + counter), command.argv[0]);
+        while (split_path[counter] != NULL) {
+            char file_path[strlen(split_path[counter]) + strlen(command.argv[0]) + 2];
+            sprintf(file_path, "%s/%s", split_path[counter], command.argv[0]);
             execv(file_path, command.argv);
             if (errno == EACCES) {
                 printf("%s: permission denied: %s\n", SHELL_NAME, command.argv[0]);
@@ -89,42 +83,59 @@ void execute_program(struct Command command) {
             counter++;
         }
         printf("%s: command not found: %s\n", SHELL_NAME, command.argv[0]);
+        free(split_path);
         abort();
     } else if (pid > 0) {
         if (!command.isBackground) {
             wait(0);
+        } else {
+            signal(SIGCHLD, sigchld_handler);
+            printf("%s: child pid: %d\n", SHELL_NAME, getpid());
+            fflush(stdout);
         }
     }
 }
 
-void execute_assignment(struct Command command) {
+void execute_assignment(struct Command command, bool export) {
     char temp[512];
-    strcpy(temp, command.argv[0]);
+    if (!export) {
+        strcpy(temp, command.argv[0]);
+    } else {
+        strcpy(temp, command.argv[1]);
+    }
     size_t len = strlen(temp);
+    bool found = false;
     for (int i = 1; i < len - 1; i++) {
         if (temp[i] == '=') {
             temp[i] = '\0';
-            set_variable(temp, temp + i + 1);
+            set_variable(temp, temp + i + 1, export);
+            found = true;
             break;
         }
+    }
+    if (!found && export) {
+        char* val = lookup_variable(command.argv[1]);
+        if (val != NULL) {
+            set_variable(command.argv[1], val, export);
+        }
+        free(val);
     }
 }
 
 void shell_loop(bool input_from_file) {
     bool from_file = input_from_file;
-    size_t buf_size = BUF_SIZE;
+    int buf_size = BUF_SIZE;
     char *line = (char *) malloc((buf_size + 1) * sizeof(char));
     while (true) {
         bool terminateLoop = false;
-        FILE *stream;
+        FILE *stream = NULL;
         if (from_file) {
-            //read next instruction from file
-
-            // if end of file {from_file = false; continue;}
+            stream = get_commands_batch_file();
         } else {
-            char *pwd = lookup_variable("PWD");
+            const char *pwd = lookup_variable("PWD");
             printf("%s>%s> ", SHELL_NAME, pwd);
             stream = stdin;
+            free(pwd);
         }
 
         char *ret = fgets(line, buf_size, stream);
@@ -149,7 +160,13 @@ void shell_loop(bool input_from_file) {
                 echo(parsedCommand);
                 break;
             case EXPRESSION:
-                execute_assignment(parsedCommand);
+                execute_assignment(parsedCommand, false);
+                break;
+            case EXPORT:
+                execute_assignment(parsedCommand, true);
+                break;
+            case PRINTENV:
+                printenv(parsedCommand);
                 break;
             case PWD:
                 pwd();

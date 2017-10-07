@@ -9,6 +9,8 @@
 #include <string.h>
 #include <stdlib.h>
 
+extern char **environ;
+
 void cd(char *path) {
     if (strlen(path) == 0) {
         path = lookup_variable("HOME");
@@ -19,7 +21,7 @@ void cd(char *path) {
         closedir(dir);
         char real_path[PATH_MAX];
         realpath(path, real_path);
-        set_variable("PWD", real_path);
+        set_variable("PWD", real_path, true);
         chdir(path);
     } else if (ENOENT == errno) {
         // Directory does not exist
@@ -61,4 +63,21 @@ void history() {
         printf("\t%d\t%s", counter++, line);
     }
     free(line);
+}
+
+void printenv(struct Command command) {
+    if (command.argc == 1) {
+        char** ptr = environ;
+        for ( ; *ptr != NULL ; ++ptr) {
+            printf("%s\n", *ptr);
+        }
+    } else {
+        char** ptr = ++command.argv;
+        for (; *ptr != NULL ; ++ptr) {
+            char *val = getenv(*ptr);
+            if (val != NULL) {
+                printf("%s\n", val);
+            }
+        }
+    }
 }
