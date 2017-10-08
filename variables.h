@@ -24,4 +24,6 @@ void set_variable(char *key, char *value, bool export);
 */
 void print_all_variables(void);
 
+void destroy_all_variables();
+
 #endif // VARIABLES_H_

@@ -22,6 +22,12 @@ void sigchld_handler(int sig);
 int main(int argc, char *argv[]) {
     setup_environment();
     open_history_file();
+
+//    char *test = malloc(512);
+//    strcpy(test, "$HOME/$USER/~mohammed~");
+//    printf("%s\n", test);
+//    variable_substitution(test, false);
+//    printf("%s\n", test);
     // any other early configuration should be here
     if (argc > 1) {
         if (argc > 2) {
@@ -77,12 +83,13 @@ void execute_program(struct Command command) {
             char file_path[strlen(split_path[counter]) + strlen(command.argv[0]) + 2];
             sprintf(file_path, "%s/%s", split_path[counter], command.argv[0]);
             execv(file_path, command.argv);
-            if (errno == EACCES) {
-                printf("%s: permission denied: %s\n", SHELL_NAME, command.argv[0]);
-            }
             counter++;
         }
-        printf("%s: command not found: %s\n", SHELL_NAME, command.argv[0]);
+        if (errno == EACCES) {
+            printf("%s: permission denied: %s\n", SHELL_NAME, command.argv[0]);
+        } else {
+            printf("%s: command not found: %s\n", SHELL_NAME, command.argv[0]);
+        }
         free(split_path);
         abort();
     } else if (pid > 0) {
@@ -148,6 +155,9 @@ void shell_loop(bool input_from_file) {
         }
         //parse your command here
         struct Command parsedCommand = parse_command(line);
+        if (parsedCommand.error_code == NULL_USER) {
+            continue;
+        }
         //execute your command here
         switch (parsedCommand.type) {
             case PROGRAM:
@@ -197,4 +207,5 @@ void shell_loop(bool input_from_file) {
         */
     }
     free(line);
+    destroy_all_variables();
 }

@@ -20,5 +20,6 @@ struct Command {
     char **argv;
     bool isBackground;
     enum CommandType type;
+    int error_code;
 };
 #endif //SHELL_COMMAND_H

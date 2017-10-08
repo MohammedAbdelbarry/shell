@@ -2,6 +2,10 @@
 #include <string.h>
 #include <stdbool.h>
 #include <ctype.h>
+#include "variables.h"
+#include "constants.h"
+#include <stdio.h>
+#include <pwd.h>
 
 bool contains(char *str, char ch) {
     if (str == NULL) {
@@ -118,16 +122,33 @@ bool isValidUser(char ch) {
     return isalnum(ch) || ch == '_' || ch == '-';
 }
 
-void variable_substitution(const char *line, bool ignore_squotes) {
-    int buf_size = 32;
-    int argc = 0;
+void strn_replace(char *str, char *rep, int idx, int len) {
+    if (rep == NULL) {
+        return;
+    }
+    size_t rep_len = strlen(rep);
+    size_t str_len = strlen(str);
+    char buffer[str_len - len + rep_len + 1];
+    strncpy(buffer, str, idx);
+    buffer[idx] = '\0';
+    strcat(buffer, rep);
+    strcat(buffer, str + idx + len);
+    strcpy(str, buffer);
+    return;
+}
+
+int variable_substitution(const char *line, bool ignore_squotes) {
     enum states {
         IN_VARIABLE, IN_OTHER, IN_SQUOTE, IN_TILDE
     } state = IN_OTHER;
     char *word_start = NULL;
-    char *buffer = line;
-    for (char *ptr = buffer; *ptr != '\0'; ptr++) {
+    bool finished = false;
+    for (char *ptr = line; ; ptr++) {
         char ch = (unsigned char) *ptr;
+        if (finished) {
+            break;
+        }
+        finished = *ptr == '\0';
         switch (state) {
             case IN_OTHER:
                 if (ignore_squotes && ch == '\'') {
@@ -154,19 +175,49 @@ void variable_substitution(const char *line, bool ignore_squotes) {
 
             case IN_VARIABLE:
                 if (!isValidVar(ch)) {
-                    // TODO: handle variable substitution
+                    state = IN_OTHER;
+                    char query[ptr - word_start + 1];
+                    strncpy(query, word_start, ptr - word_start);
+                    query[ptr - word_start] = '\0';
+                    char *val = lookup_variable(query);
+                    bool val_is_null = val == NULL;
+                    if (val_is_null) {
+                        val = "";
+                    }
+                    strn_replace(line, val, word_start - line - 1, ptr - word_start + 1);
+                    if (!val_is_null) {
+                        free(val);
+                    }
                 }
                 continue;
 
             case IN_TILDE:
                 if (!isValidUser(ch)) {
-                    // TODO: handle home dir substitution
+                    state = IN_OTHER;
+                    char *rep = NULL;
+                    bool empty = ptr == word_start;
+                    if (ptr == word_start) {
+                        rep = lookup_variable("HOME");
+                    } else {
+                        char query[ptr - word_start + 1];
+                        strncpy(query, word_start, ptr - word_start);
+                        query[ptr - word_start] = '\0';
+                        struct passwd *result = getpwnam(query);
+                        if (result == NULL) {
+                            printf("%s: no such user or named directory: %s\n", SHELL_NAME, query);
+                            return NULL_USER;
+                        }
+                        rep = result -> pw_dir;
+                    }
+                    strn_replace(line, rep, word_start - line - 1, ptr - word_start + 1);
+                    if (empty) {
+                        free(rep);
+                    }
                 }
                 continue;
         }
     }
-
-    return;
+    return 0;
 }
 
 

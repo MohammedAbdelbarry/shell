@@ -34,6 +34,7 @@ struct Command parse_command(char *command) {
     parsedCommand.argv = NULL;
     parsedCommand.argc = 0;
     parsedCommand.type = COMMENT;
+    parsedCommand.error_code = 0;
     // pre processing
     size_t commandLen = strlen(command);
     for (unsigned int i = 0; i < commandLen; i++) {
@@ -48,7 +49,14 @@ struct Command parse_command(char *command) {
         return parsedCommand;
     }
 
+    int ret = variable_substitution(command, true);
+
     parsedCommand.argv = shellSplit(command);
+
+    if (ret == NULL_USER) {
+        parsedCommand.error_code = NULL_USER;
+        return parsedCommand;
+    }
 
     if (parsedCommand.argv == NULL) {
         printf("%s: failed to allocate memory\n", SHELL_NAME);
@@ -61,18 +69,18 @@ struct Command parse_command(char *command) {
 
     int counter = 0;
     while (parsedCommand.argv[counter] != NULL) {
-        if (parsedCommand.argv[counter][0] == '$') {
-            parsedCommand.argv[counter] = lookup_variable(parsedCommand.argv[counter] + 1);
-            parsedCommand.argv[counter] = parsedCommand.argv[counter] == NULL ? "" : parsedCommand.argv[counter];
-        } else if (parsedCommand.argv[counter][0] == '~') {
-            if (strlen(parsedCommand.argv[counter]) == 1) {
-                parsedCommand.argv[counter] = lookup_variable("HOME");
-            } else {
-                char buffer[512];
-                sprintf(buffer, "/home/%s", parsedCommand.argv[counter] + 1);
-                parsedCommand.argv[counter] = strdup(buffer);
-            }
-        }
+//        if (parsedCommand.argv[counter][0] == '$') {
+//            parsedCommand.argv[counter] = lookup_variable(parsedCommand.argv[counter] + 1);
+//            parsedCommand.argv[counter] = parsedCommand.argv[counter] == NULL ? "" : parsedCommand.argv[counter];
+//        } else if (parsedCommand.argv[counter][0] == '~') {
+//            if (strlen(parsedCommand.argv[counter]) == 1) {
+//                parsedCommand.argv[counter] = lookup_variable("HOME");
+//            } else {
+//                char buffer[512];
+//                sprintf(buffer, "/home/%s", parsedCommand.argv[counter] + 1);
+//                parsedCommand.argv[counter] = strdup(buffer);
+//            }
+//        }
         counter++;
     }
     parsedCommand.argv = parsedCommand.argv;
