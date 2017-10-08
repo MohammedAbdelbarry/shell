@@ -12,7 +12,8 @@
 extern char **environ;
 
 void cd(char *path) {
-    if (strlen(path) == 0) {
+    bool empty = path == NULL || strlen(path) == 0;
+    if (empty) {
         path = lookup_variable("HOME");
     }
     DIR *dir = opendir(path);
@@ -29,6 +30,9 @@ void cd(char *path) {
     } else {
         // Failed to open directory
         printf("cd: failed to change directory\n");
+    }
+    if (empty) {
+        free(path);
     }
 }
 

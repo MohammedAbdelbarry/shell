@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <ctype.h>
 
 bool contains(char *str, char ch) {
     if (str == NULL) {
@@ -48,8 +49,7 @@ char **split(const char *line, const char *tokenDelimiter, bool ignore_quotes) {
         IN_DELIM, IN_WORD, IN_SQUOTE, IN_DQUOTE
     } state = IN_DELIM;
     char *word_start = NULL;
-    char *buffer = line;//strdup(line);
-    for (char *ptr = buffer; *ptr != '\0'; ptr++) {
+    for (char *ptr = line; *ptr != '\0'; ptr++) {
         char ch = (unsigned char) *ptr;
 
         switch (state) {
@@ -109,6 +109,66 @@ char **split(const char *line, const char *tokenDelimiter, bool ignore_quotes) {
     argv[argc] = NULL;
     return argv;
 }
+
+bool isValidVar(char ch) {
+    return isalnum(ch) || ch == '_';
+}
+
+bool isValidUser(char ch) {
+    return isalnum(ch) || ch == '_' || ch == '-';
+}
+
+void variable_substitution(const char *line, bool ignore_squotes) {
+    int buf_size = 32;
+    int argc = 0;
+    enum states {
+        IN_VARIABLE, IN_OTHER, IN_SQUOTE, IN_TILDE
+    } state = IN_OTHER;
+    char *word_start = NULL;
+    char *buffer = line;
+    for (char *ptr = buffer; *ptr != '\0'; ptr++) {
+        char ch = (unsigned char) *ptr;
+        switch (state) {
+            case IN_OTHER:
+                if (ignore_squotes && ch == '\'') {
+                    state = IN_SQUOTE;
+                    word_start = ptr + 1;
+                    continue;
+                } else if (ch == '$') {
+                    state = IN_VARIABLE;
+                    word_start = ptr + 1;
+                    continue;
+                } else if (ch == '~') {
+                    state = IN_TILDE;
+                    word_start = ptr + 1;
+                    continue;
+                }
+                state = IN_OTHER;
+                continue;
+
+            case IN_SQUOTE:
+                if (ignore_squotes && ch == '\'') {
+                    state = IN_OTHER;
+                }
+                continue;
+
+            case IN_VARIABLE:
+                if (!isValidVar(ch)) {
+                    // TODO: handle variable substitution
+                }
+                continue;
+
+            case IN_TILDE:
+                if (!isValidUser(ch)) {
+                    // TODO: handle home dir substitution
+                }
+                continue;
+        }
+    }
+
+    return;
+}
+
 
 char **shellSplit(char *line) {
     const char *TOKEN_DELIMITER = " \t\n";
