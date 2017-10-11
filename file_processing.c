@@ -20,7 +20,6 @@ void open_history_file() {
     strcat(buffer, history_path);
     history_file = fopen(buffer, "a+");
     free(buffer);
-    free(shell_home);
 }
 
 FILE *get_history_file() {
@@ -36,7 +35,14 @@ void close_history_file() {
 	log file section
 */
 void open_log_file() {
-    log_file = fopen(strcat(lookup_variable("SHELL_HOME"), "/shell.log"), "a+");
+    char *shell_home = lookup_variable("SHELL_HOME");
+    char *log_path = "/shell.log";
+    size_t buffer_len = strlen(shell_home) + strlen(log_path) + 1;
+    char *buffer = (char *) malloc(buffer_len * sizeof(char));
+    strcpy(buffer, shell_home);
+    strcat(buffer, log_path);
+    log_file = fopen(buffer, "a+");
+    free(buffer);
 }
 
 FILE *get_log_file() {
@@ -67,6 +73,6 @@ void fputline(FILE *file, char *line) {
     if (file == NULL) {
         fprintf(stderr, "%s: failed to write to history file", SHELL_NAME);
     }
-    static int count = 0;
-    fprintf(file, "%s\n", line);
+    fprintf(file, "%s\n", strdup(line));
+    //fputs(line, file);
 }

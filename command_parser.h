@@ -15,7 +15,7 @@
 	- Best practice is to use helper function for each collection of logical instructions,
 	  example: function for splitting the command by space into array of strings, ..etc
 */
-struct Command parse_command(char *command);
+struct Command parse_command(char **command_ptr);
 
 
 #endif // COMMAND_PARSER_H

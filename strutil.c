@@ -89,17 +89,18 @@ char **split(const char *line, const char *tokenDelimiter, bool ignore_quotes) {
                     argv[argc++] = word_start;
                     state = IN_DELIM;
                 }
-                continue;
+                break;
 
             case IN_WORD:
                 if (contains(tokenDelimiter, ch)) {
                     *ptr = '\0';
+                    printf("%d\n", argc);
                     argv[argc++] = word_start;
                     state = IN_DELIM;
                 }
-                continue;
+                break;
         }
-        if (argc >= buf_size) {
+        if (argc + 1 >= buf_size) {
             buf_size *= 2;
             argv = (char **) realloc(argv, buf_size * sizeof(char *));
             if (argv == NULL) {
@@ -137,12 +138,17 @@ void strn_replace(char *str, char *rep, int idx, int len) {
     return;
 }
 
-int variable_substitution(const char *line, bool ignore_squotes) {
+int variable_substitution(const char **line_ptr, bool ignore_squotes) {
     enum states {
         IN_VARIABLE, IN_OTHER, IN_SQUOTE, IN_TILDE
     } state = IN_OTHER;
+    if (line_ptr == NULL || &line_ptr == NULL) {
+        return NULL_ARG;
+    }
     char *word_start = NULL;
     bool finished = false;
+    int size = BUF_SIZE;
+    char* line = *line_ptr;
     for (char *ptr = line; ; ptr++) {
         char ch = (unsigned char) *ptr;
         if (finished) {
@@ -175,7 +181,6 @@ int variable_substitution(const char *line, bool ignore_squotes) {
 
             case IN_VARIABLE:
                 if (!isValidVar(ch)) {
-                    state = IN_OTHER;
                     char query[ptr - word_start + 1];
                     strncpy(query, word_start, ptr - word_start);
                     query[ptr - word_start] = '\0';
@@ -184,18 +189,39 @@ int variable_substitution(const char *line, bool ignore_squotes) {
                     if (val_is_null) {
                         val = "";
                     }
+                    int offset = strlen(val) - (ptr - word_start) - 1;
+                    if (strlen(line) + offset >= size) {
+                        size *= 2;
+                        int cur_idx = ptr - line;
+                        int word_start_idx = word_start - line;
+                        char *reallocated_line = realloc(line, size);
+                        if (reallocated_line != NULL) {
+                            line = reallocated_line;
+                            ptr = line + cur_idx;
+                            word_start = line + word_start_idx;
+                            //printf("REALLOC: SUCC\n");
+                        } else {
+                            //printf("REALLOC: FAIL\n");
+                            return MALLOC_ERR;
+                        }
+                    }
                     strn_replace(line, val, word_start - line - 1, ptr - word_start + 1);
-                    if (!val_is_null) {
-                        free(val);
+                    ptr += offset;
+                    if (ch == '$') {
+                        state = IN_VARIABLE;
+                        word_start = ptr + 1;
+                    } else if (ch == '~') {
+                        state = IN_TILDE;
+                        word_start = ptr + 1;
+                    } else {
+                        state = IN_OTHER;
                     }
                 }
                 continue;
 
             case IN_TILDE:
                 if (!isValidUser(ch)) {
-                    state = IN_OTHER;
                     char *rep = NULL;
-                    bool empty = ptr == word_start;
                     if (ptr == word_start) {
                         rep = lookup_variable("HOME");
                     } else {
@@ -209,14 +235,38 @@ int variable_substitution(const char *line, bool ignore_squotes) {
                         }
                         rep = result -> pw_dir;
                     }
+                    int offset = strlen(rep) - (ptr - word_start) - 1;
+                    if (strlen(line) + offset >= size) {
+                        size *= 2;
+                        int cur_idx = ptr - line;
+                        int word_start_idx = word_start - line;
+                        char *reallocated_line = realloc(line, size);
+                        if (reallocated_line != NULL) {
+                            line = reallocated_line;
+                            ptr = line + cur_idx;
+                            word_start = line + word_start_idx;
+                            //printf("REALLOC: SUCC\n");
+                        } else {
+                            //printf("REALLOC: FAIL\n");
+                            return MALLOC_ERR;
+                        }
+                    }
                     strn_replace(line, rep, word_start - line - 1, ptr - word_start + 1);
-                    if (empty) {
-                        free(rep);
+                    ptr += offset;
+                    if (ch == '$') {
+                        state = IN_VARIABLE;
+                        word_start = ptr + 1;
+                    } else if (ch == '~') {
+                        state = IN_TILDE;
+                        word_start = ptr + 1;
+                    } else {
+                        state = IN_OTHER;
                     }
                 }
                 continue;
         }
     }
+    *line_ptr = line;
     return 0;
 }
 

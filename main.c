@@ -43,7 +43,12 @@ int main(int argc, char *argv[]) {
     } else {
         start(false);
     }
+    destroy_all_variables();
     close_history_file();
+    //close_log_file();
+    if (argc > 1) {
+        close_commands_batch_file();
+    }
     return 0;
 }
 
@@ -75,7 +80,7 @@ void execute_program(struct Command command) {
         if (command.isBackground) {
 
         }
-        const char *PATH = lookup_variable("PATH");
+        const char *PATH = strdup(lookup_variable("PATH"));
         char **split_path = split(PATH, ":", false);
         int counter = 0;
         execv(command.argv[0], command.argv);
@@ -90,6 +95,7 @@ void execute_program(struct Command command) {
         } else {
             printf("%s: command not found: %s\n", SHELL_NAME, command.argv[0]);
         }
+        free(PATH);
         free(split_path);
         abort();
     } else if (pid > 0) {
@@ -125,15 +131,14 @@ void execute_assignment(struct Command command, bool export) {
         if (val != NULL) {
             set_variable(command.argv[1], val, export);
         }
-        free(val);
     }
 }
 
 void shell_loop(bool input_from_file) {
     bool from_file = input_from_file;
     int buf_size = BUF_SIZE;
-    char *line = (char *) malloc((buf_size + 1) * sizeof(char));
     while (true) {
+        char *line = (char *) malloc((buf_size + 2) * sizeof(char));
         bool terminateLoop = false;
         FILE *stream = NULL;
         if (from_file) {
@@ -142,19 +147,19 @@ void shell_loop(bool input_from_file) {
             const char *pwd = lookup_variable("PWD");
             printf("%s>%s> ", SHELL_NAME, pwd);
             stream = stdin;
-            free(pwd);
         }
 
-        char *ret = fgets(line, buf_size, stream);
+        char *ret = fgets(line, buf_size + 2, stream);
         if (ret == NULL) {
             break;
         }
         line[strlen(line) - 1] = '\0';
+        char* orig_line = strdup(line);
         if (from_file) {
             printf("%s\n", line);
         }
         //parse your command here
-        struct Command parsedCommand = parse_command(line);
+        struct Command parsedCommand = parse_command(&line);
         if (parsedCommand.error_code == NULL_USER) {
             continue;
         }
@@ -193,11 +198,15 @@ void shell_loop(bool input_from_file) {
         }
         if (parsedCommand.type != COMMENT) {
             // save command to history
-            fputline(get_history_file(), line);
+            fputline(get_history_file(), orig_line);
         }
         if (parsedCommand.argv != NULL) {
             free(parsedCommand.argv); //SEGABRT WHEN EMPTY
         }
+
+        free(line);
+        free(orig_line);
+
         if (terminateLoop) {
             break;
         }
@@ -206,6 +215,4 @@ void shell_loop(bool input_from_file) {
             each one contains a coherent set of logical instructions
         */
     }
-    free(line);
-    destroy_all_variables();
 }

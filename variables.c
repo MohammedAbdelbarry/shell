@@ -14,7 +14,7 @@ int numVariables = 0;
 const char *lookup_variable(char *key) {
     for (int i = 0; i < numVariables; ++i) {
         if (strcmp(variables[i].key, key) == 0) {
-            return strdup(variables[i].value);
+            return variables[i].value;
         }
     }
     return getenv(key);
@@ -28,6 +28,7 @@ void set_variable(char *key, char *value, bool export) {
     }
     for (int i = 0; i < numVariables; ++i) {
         if (strcmp(variables[i].key, key) == 0) {
+            free(variables[i].value);
             variables[i].value = strdup(value);
             found = true;
         }

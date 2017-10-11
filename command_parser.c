@@ -28,13 +28,18 @@ bool isBackground(char **argv, int argc) {
     return false;
 }
 
-struct Command parse_command(char *command) {
+struct Command parse_command(char **command_ptr) {
     const char COMMENT_CHAR = '#';
     struct Command parsedCommand;
     parsedCommand.argv = NULL;
     parsedCommand.argc = 0;
     parsedCommand.type = COMMENT;
     parsedCommand.error_code = 0;
+    if (command_ptr == NULL || *command_ptr == NULL) {
+        parsedCommand.error_code = NULL_ARG;
+        return parsedCommand;
+    }
+    char* command = *command_ptr;
     // pre processing
     size_t commandLen = strlen(command);
     for (unsigned int i = 0; i < commandLen; i++) {
@@ -49,15 +54,15 @@ struct Command parse_command(char *command) {
         return parsedCommand;
     }
 
-    int ret = variable_substitution(command, true);
+    int ret = variable_substitution(&command, true);
 
-    parsedCommand.argv = shellSplit(command);
-
-    if (ret == NULL_USER) {
-        parsedCommand.error_code = NULL_USER;
+    if (ret != SUCCESS) {
+        parsedCommand.error_code = ret;
         return parsedCommand;
     }
 
+    parsedCommand.argv = shellSplit(command);
+    *command_ptr = command;
     if (parsedCommand.argv == NULL) {
         printf("%s: failed to allocate memory\n", SHELL_NAME);
         return parsedCommand;

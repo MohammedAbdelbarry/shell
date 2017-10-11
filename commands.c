@@ -31,9 +31,6 @@ void cd(char *path) {
         // Failed to open directory
         printf("cd: failed to change directory\n");
     }
-    if (empty) {
-        free(path);
-    }
 }
 
 
