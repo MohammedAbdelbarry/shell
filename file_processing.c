@@ -1,5 +1,6 @@
 #include <string.h>
 #include <stdlib.h>
+#include <time.h>
 #include "file_processing.h"
 #include "variables.h"
 #include "constants.h"
@@ -74,4 +75,22 @@ void fputline(FILE *file, char *line) {
         fprintf(stderr, "%s: failed to write to history file", SHELL_NAME);
     }
     fprintf(file, "%s\n", line);
+}
+
+void log(FILE* file, char* message, enum LogLevel level) {
+
+    if (file == NULL) {
+        return;
+    }
+
+    const static char* log_level_string[] = {"DEBUG", "INFO", "WARN", "ERROR", "FATAL"};
+
+    char buff[20];
+    struct tm *parsed_time;
+
+    time_t now = time(0);
+    parsed_time = localtime(&now);
+
+    strftime(buff, sizeof(buff), "%Y-%m-%d %H:%M:%S", parsed_time);
+    fprintf(file, "%s [%s] %s: %s\n", buff, log_level_string[level], SHELL_NAME, message);
 }

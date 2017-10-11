@@ -1,11 +1,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#include <ctype.h>
 #include "variables.h"
 #include "constants.h"
 #include <stdio.h>
 #include <pwd.h>
+#include <ctype.h>
 
 bool contains(char *str, char ch) {
     if (str == NULL) {
@@ -42,7 +42,7 @@ char **split_strtok(const char *line, const char *tokenDelimiter) {
     return argv;
 }
 
-char **split(const char *line, const char *tokenDelimiter, bool ignore_quotes) {
+char **split(const char *line, const char *tokenDelimiter, bool ignore_quotes, bool allow_quotes_in_words) {
     int buf_size = 32;
     char **argv = (char **) malloc(buf_size * sizeof(char *));
     if (argv == NULL) {
@@ -96,6 +96,13 @@ char **split(const char *line, const char *tokenDelimiter, bool ignore_quotes) {
                     *ptr = '\0';
                     argv[argc++] = word_start;
                     state = IN_DELIM;
+                }
+                if (!allow_quotes_in_words && ignore_quotes && ch == '"') {
+                    state = IN_DQUOTE;
+                    continue;
+                } else if (!allow_quotes_in_words && ignore_quotes && ch == '\'') {
+                    state = IN_SQUOTE;
+                    continue;
                 }
                 break;
         }
@@ -270,6 +277,66 @@ int variable_substitution(const char **line_ptr, bool ignore_squotes) {
 
 char **shellSplit(char *line) {
     const char *TOKEN_DELIMITER = " \t\n";
-    char **argv = split(line, TOKEN_DELIMITER, true);
+    char **argv = split(line, TOKEN_DELIMITER, true, false);
     return argv;
+}
+
+char **splitAssignment (char *command) {
+    if (command == NULL) {
+        return NULL;
+    }
+    char **argv = (char**) malloc(2 * sizeof(char *));
+    size_t commandLen = strlen(command);
+    enum states {
+        IN_VARIABLE, IN_OTHER, IN_VAL
+    } state = IN_OTHER;
+    argv[0] = command;
+    for (int i = 0; i < commandLen; i++) {
+        switch (state) {
+            case IN_OTHER:
+                if (isalpha(command[i])) {
+                    state = IN_VARIABLE;
+                }
+                break;
+            case IN_VARIABLE:
+                if (command[i] == '=') {
+                    command[i] = '\0';
+                    argv[1] = command + i + 1;
+                    return argv;
+                }
+                break;
+        }
+    }
+    return argv;
+}
+
+bool isAssignment(char *command) {
+    if (command == NULL) {
+        return false;
+    }
+    size_t commandLen = strlen(command);
+    int in_other_cnt = 0;
+    enum states {
+        IN_VARIABLE, IN_OTHER, IN_VAL
+    } state = IN_OTHER;
+    for (int i = 0; i < commandLen; i++) {
+        switch (state) {
+            case IN_OTHER:
+                in_other_cnt++;
+                if (isalpha(command[i])) {
+                    state = IN_VARIABLE;
+                }
+                break;
+            case IN_VARIABLE:
+                if (command[i] == '=') {
+                    state = IN_VAL;
+                } else if (!isValidVar(command[i])) {
+                    return false;
+                }
+                break;
+            case IN_VAL:
+                break;
+        }
+    }
+    return state == IN_VAL && in_other_cnt == 1;
 }

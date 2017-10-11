@@ -22,7 +22,8 @@ void sigchld_handler(int sig);
 int main(int argc, char *argv[]) {
     setup_environment();
     open_history_file();
-
+    open_log_file();
+    log(get_log_file(), "shell started", INFO);
 //    char *test = malloc(512);
 //    strcpy(test, "$HOME/$USER/~mohammed~");
 //    printf("%s\n", test);
@@ -45,7 +46,8 @@ int main(int argc, char *argv[]) {
     }
     destroy_all_variables();
     close_history_file();
-    //close_log_file();
+    log(get_log_file(), "shell exited", INFO);
+    close_log_file();
     if (argc > 1) {
         close_commands_batch_file();
     }
@@ -55,7 +57,11 @@ int main(int argc, char *argv[]) {
 void sigchld_handler(int sig) {
     pid_t pid;
     pid = wait(0);
-    printf("%s: child %d done.\n", SHELL_NAME, pid);
+    char buffer[512];
+    sprintf(buffer, "child %d done.", pid);
+    printf("%s: %s\n", SHELL_NAME, buffer);
+
+    log(get_log_file(), buffer, DEBUG);
     fflush(stdout);
 }
 
@@ -81,7 +87,7 @@ void execute_program(struct Command command) {
 
         }
         const char *PATH = strdup(lookup_variable("PATH"));
-        char **split_path = split(PATH, ":", false);
+        char **split_path = split(PATH, ":", false, true);
         int counter = 0;
         execv(command.argv[0], command.argv);
         while (split_path[counter] != NULL) {
@@ -99,11 +105,16 @@ void execute_program(struct Command command) {
         free(split_path);
         abort();
     } else if (pid > 0) {
+        char buffer[512];
+        sprintf(buffer, "child %d started", pid);
+        log(get_log_file(), buffer, DEBUG);
         if (!command.isBackground) {
             wait(0);
+            sprintf(buffer, "child %d done.", pid);
+            log(get_log_file(), buffer, DEBUG);
         } else {
             signal(SIGCHLD, sigchld_handler);
-            printf("%s: child pid: %d\n", SHELL_NAME, getpid());
+            printf("%s: %s\n", SHELL_NAME, buffer);
             fflush(stdout);
         }
     }
@@ -118,7 +129,7 @@ void execute_assignment(struct Command command, bool export) {
     }
     size_t len = strlen(temp);
     bool found = false;
-    for (int i = 1; i < len - 1; i++) {
+    for (int i = 1; i < len; i++) {
         if (temp[i] == '=') {
             temp[i] = '\0';
             set_variable(temp, temp + i + 1, export);

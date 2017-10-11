@@ -7,7 +7,7 @@
 
 bool contains(char *str, char ch);
 
-char **split(const char *line, const char *tokenDelimiter, bool ignore_quotes);
+char **split(const char *line, const char *tokenDelimiter, bool ignore_quotes, bool allow_quotes_in_words);
 
 char **split_strtok(const char *line, const char *tokenDelimiter, bool ignore_quotes);
 
@@ -17,4 +17,7 @@ int variable_substitution(const char **line_ptr, bool ignore_squotes);
 
 char **shellSplit(char *line);
 
+bool isAssignment(char *command);
+
+char **splitAssignment (char *command);
 #endif //SHELL_STRUTIL_H

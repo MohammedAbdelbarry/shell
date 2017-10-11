@@ -1,20 +1,9 @@
 #include "constants.h"
 #include "command_parser.h"
 #include "strutil.h"
-#include "variables.h"
 #include <stdio.h>
 #include <string.h>
-
-
-bool isAssignment(char *command) {
-    size_t commandLen = strlen(command);
-    for (int i = 1; i < commandLen - 1; i++) {
-        if (command[i] == '=') {
-            return true;
-        }
-    }
-    return false;
-}
+#include <ctype.h>
 
 bool isBackground(char **argv, int argc) {
     size_t commandLen = strlen(argv[0]);

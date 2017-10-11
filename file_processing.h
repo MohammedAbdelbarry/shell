@@ -2,6 +2,7 @@
 #define FILE_PROCESSING_H_
 
 #include <stdio.h>
+#include "log_types.h"
 
 /*
 	history file basic functions' prototypes
@@ -35,4 +36,6 @@ void close_commands_batch_file();
  */
 void fputline(FILE *file, char *line);
 
+
+void log(FILE* file, char* message, enum LogLevel level);
 #endif // FILE_PROCESSING_H_
