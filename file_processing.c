@@ -73,6 +73,5 @@ void fputline(FILE *file, char *line) {
     if (file == NULL) {
         fprintf(stderr, "%s: failed to write to history file", SHELL_NAME);
     }
-    fprintf(file, "%s\n", strdup(line));
-    //fputs(line, file);
+    fprintf(file, "%s\n", line);
 }

@@ -94,7 +94,6 @@ char **split(const char *line, const char *tokenDelimiter, bool ignore_quotes) {
             case IN_WORD:
                 if (contains(tokenDelimiter, ch)) {
                     *ptr = '\0';
-                    printf("%d\n", argc);
                     argv[argc++] = word_start;
                     state = IN_DELIM;
                 }
@@ -199,9 +198,7 @@ int variable_substitution(const char **line_ptr, bool ignore_squotes) {
                             line = reallocated_line;
                             ptr = line + cur_idx;
                             word_start = line + word_start_idx;
-                            //printf("REALLOC: SUCC\n");
                         } else {
-                            //printf("REALLOC: FAIL\n");
                             return MALLOC_ERR;
                         }
                     }

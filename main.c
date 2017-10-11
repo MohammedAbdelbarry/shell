@@ -201,7 +201,7 @@ void shell_loop(bool input_from_file) {
             fputline(get_history_file(), orig_line);
         }
         if (parsedCommand.argv != NULL) {
-            free(parsedCommand.argv); //SEGABRT WHEN EMPTY
+            free(parsedCommand.argv);
         }
 
         free(line);
