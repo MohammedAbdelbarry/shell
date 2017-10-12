@@ -6,7 +6,7 @@
 #include <libgen.h>
 
 void setup_environment() {
-    char buffer[PATH_MAX];
+    char buffer[PATH_MAX] = "";
     readlink("/proc/self/exe", buffer, PATH_MAX);
     set_variable("PATH", getenv("PATH"), false);
     set_variable("HOME", getenv("HOME"), false);
