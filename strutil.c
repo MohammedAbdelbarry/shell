@@ -290,34 +290,6 @@ char **shellSplit(char *line) {
     return argv;
 }
 
-//char **splitAssignment(char *command) {
-//    if (command == NULL) {
-//        return NULL;
-//    }
-//    char **argv = (char **) malloc(2 * sizeof(char *));
-//    size_t commandLen = strlen(command);
-//    enum states {
-//        IN_VARIABLE, IN_OTHER, IN_VAL
-//    } state = IN_OTHER;
-//    argv[0] = command;
-//    for (int i = 0; i < commandLen; i++) {
-//        switch (state) {
-//            case IN_OTHER:
-//                if (isalpha(command[i])) {
-//                    state = IN_VARIABLE;
-//                }
-//                break;
-//            case IN_VARIABLE:
-//                if (command[i] == '=') {
-//                    command[i] = '\0';
-//                    argv[1] = command + i + 1;
-//                    return argv;
-//                }
-//                break;
-//        }
-//    }
-//    return argv;
-//}
 
 bool isAssignment(char *command) {
     if (command == NULL) {

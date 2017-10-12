@@ -56,4 +56,5 @@ void destroy_all_variables() {
         free(variables[i].key);
         free(variables[i].value);
     }
+    numVariables = 0;
 }

@@ -25,13 +25,13 @@ int main(int argc, char *argv[]) {
 
     if (argc > 1) {
         if (argc > 2) {
-            printf("%s: error, too many arguments\n", SHELL_NAME);
+            fprintf(stderr, "%s: error, too many arguments\n", SHELL_NAME);
             log(get_log_file(), "too many arguments", ERROR);
             return 1;
         }
         open_commands_batch_file(argv[1]);
         if (get_commands_batch_file() == NULL) {
-            printf("%s: error, batch file not found\n", SHELL_NAME);
+            fprintf(stderr, "%s: error, batch file not found\n", SHELL_NAME);
             log(get_log_file(), "batch file not found", ERROR);
             return -1;
         }
@@ -49,18 +49,6 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-void sigchld_handler(int sig) {
-    pid_t pid;
-    pid = wait(0);
-    char buffer[512];
-    sprintf(buffer, "child %d done", pid);
-    printf("%s: %s\n", SHELL_NAME, buffer);
-
-    log(get_log_file(), buffer, DEBUG);
-    fflush(stdout);
-}
-
-
 void start(bool read_from_file) {
     cd(""); // let shell starts from home
 
@@ -69,79 +57,6 @@ void start(bool read_from_file) {
         shell_loop(true);
     } else {
         shell_loop(false);
-    }
-}
-
-void execute_program(struct Command command) {
-    signal(SIGCHLD, SIG_DFL);
-    fflush(get_history_file());
-    fflush(stdin);
-    pid_t pid = fork();
-    if (pid == 0) {
-        if (command.isBackground) {
-
-        }
-        const char *PATH = strdup(lookup_variable("PATH"));
-        char **split_path = split(PATH, ":", false, true);
-        int counter = 0;
-        execv(command.argv[0], command.argv);
-        while (split_path[counter] != NULL) {
-            char file_path[strlen(split_path[counter]) + strlen(command.argv[0]) + 2];
-            sprintf(file_path, "%s/%s", split_path[counter], command.argv[0]);
-            execv(file_path, command.argv);
-            counter++;
-        }
-        if (errno == EACCES) {
-            printf("%s: permission denied: %s\n", SHELL_NAME, command.argv[0]);
-        } else {
-            printf("%s: command not found: %s\n", SHELL_NAME, command.argv[0]);
-        }
-        free(PATH);
-        free(split_path);
-        abort();
-    } else if (pid > 0) {
-        char buffer[512];
-        sprintf(buffer, "child %d started: %s", pid, command.argv[0]);
-        log(get_log_file(), buffer, DEBUG);
-        if (!command.isBackground) {
-            int status;
-            do {
-                waitpid(pid, &status, WUNTRACED);
-            } while (!WIFEXITED(status) && !WIFSIGNALED(status));
-            sprintf(buffer, "child %d done.", pid);
-            log(get_log_file(), buffer, DEBUG);
-        } else {
-            signal(SIGCHLD, sigchld_handler);
-            printf("%s: %s\n", SHELL_NAME, buffer);
-            fflush(stdout);
-        }
-    }
-}
-
-void execute_assignment(struct Command command, bool export) {
-    char temp[512];
-    if (!export) {
-        strcpy(temp, command.argv[0]);
-    } else {
-        strcpy(temp, command.argv[1]);
-    }
-    size_t len = strlen(temp);
-    bool found = false;
-    for (int i = 1; i < len; i++) {
-        if (temp[i] == '=') {
-            temp[i] = '\0';
-            set_variable(temp, temp + i + 1, export);
-            found = true;
-            break;
-        }
-    }
-    if (!found && export) {
-        char *val = lookup_variable(command.argv[1]);
-        if (val != NULL) {
-            val = strdup(val);
-            set_variable(command.argv[1], val, export);
-            free(val);
-        }
     }
 }
 
@@ -167,7 +82,7 @@ void shell_loop(bool input_from_file) {
         if (strlen(line) == buf_size + 1) {
             log(get_log_file(), "Line is longer than 512 characters", ERROR);
             fflush(stdin);
-            printf("%s: error: line is longer than 512 characters\n", SHELL_NAME);
+            fprintf(stderr, "%s: error: line is longer than 512 characters\n", SHELL_NAME);
             continue;
         }
         line[strlen(line) - 1] = '\0';

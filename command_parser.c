@@ -62,18 +62,6 @@ struct Command parse_command(char **command_ptr) {
 
     int counter = 0;
     while (parsedCommand.argv[counter] != NULL) {
-//        if (parsedCommand.argv[counter][0] == '$') {
-//            parsedCommand.argv[counter] = lookup_variable(parsedCommand.argv[counter] + 1);
-//            parsedCommand.argv[counter] = parsedCommand.argv[counter] == NULL ? "" : parsedCommand.argv[counter];
-//        } else if (parsedCommand.argv[counter][0] == '~') {
-//            if (strlen(parsedCommand.argv[counter]) == 1) {
-//                parsedCommand.argv[counter] = lookup_variable("HOME");
-//            } else {
-//                char buffer[512];
-//                sprintf(buffer, "/home/%s", parsedCommand.argv[counter] + 1);
-//                parsedCommand.argv[counter] = strdup(buffer);
-//            }
-//        }
         counter++;
     }
     parsedCommand.argv = parsedCommand.argv;

@@ -74,7 +74,4 @@ char **shellSplit(char *line);
  * and false otherwise
  */
 bool isAssignment(char *command);
-
-//char **splitAssignment(char *command);
-
 #endif //SHELL_STRUTIL_H

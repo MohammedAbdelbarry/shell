@@ -40,4 +40,17 @@ void history();
  */
 void printenv(struct Command command);
 
+/**
+ * Executes the assignment command by calling set_variable.
+ * @param command The assignment command
+ * @param export A boolean indicating whether the variable is an
+ * environment variable (true) or a shell variable (false)
+ */
+void execute_assignment(struct Command command, bool export);
+
+/**
+ * Executes the program whose name is command.argv[0].
+ * @param command The parsed program execution command
+ */
+void execute_program(struct Command command);
 #endif // COMMANDS_H_
