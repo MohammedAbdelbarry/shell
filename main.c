@@ -26,11 +26,13 @@ int main(int argc, char *argv[]) {
     if (argc > 1) {
         if (argc > 2) {
             printf("%s: error, too many arguments\n", SHELL_NAME);
+            log(get_log_file(), "too many arguments", ERROR);
             return 1;
         }
         open_commands_batch_file(argv[1]);
         if (get_commands_batch_file() == NULL) {
             printf("%s: error, batch file not found\n", SHELL_NAME);
+            log(get_log_file(), "batch file not found", ERROR);
             return -1;
         }
         start(true);
@@ -51,7 +53,7 @@ void sigchld_handler(int sig) {
     pid_t pid;
     pid = wait(0);
     char buffer[512];
-    sprintf(buffer, "child %d done.", pid);
+    sprintf(buffer, "child %d done", pid);
     printf("%s: %s\n", SHELL_NAME, buffer);
 
     log(get_log_file(), buffer, DEBUG);
@@ -161,6 +163,12 @@ void shell_loop(bool input_from_file) {
         char *ret = fgets(line, buf_size + 2, stream);
         if (ret == NULL) {
             break;
+        }
+        if (strlen(line) == buf_size + 1) {
+            log(get_log_file(), "Line is longer than 512 characters", ERROR);
+            fflush(stdin);
+            printf("%s: error: line is longer than 512 characters\n", SHELL_NAME);
+            continue;
         }
         line[strlen(line) - 1] = '\0';
         char *orig_line = strdup(line);

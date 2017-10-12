@@ -38,11 +38,9 @@ void close_history_file() {
 */
 void open_log_file() {
     char *shell_home = lookup_variable("SHELL_HOME");
-    char *log_path = "/shell.log";
-    size_t buffer_len = strlen(shell_home) + strlen(log_path) + 1;
+    size_t buffer_len = strlen(shell_home) + strlen(SHELL_NAME) + strlen("/.log") + 1;
     char *buffer = (char *) malloc(buffer_len * sizeof(char));
-    strcpy(buffer, shell_home);
-    strcat(buffer, log_path);
+    sprintf(buffer, "%s/%s.log", shell_home, SHELL_NAME);
     log_file = fopen(buffer, "a+");
     free(buffer);
 }
@@ -64,6 +62,11 @@ void open_commands_batch_file(const char *file_path) {
     realpath(file_path, real_path);
     printf("%s\n", real_path);
     batch_file = fopen(real_path, "r");
+    if (batch_file != NULL) {
+        log(get_log_file(), "batch file opened successfully", DEBUG);
+    } else {
+        log(get_log_file(), "failed to open batch file", ERROR);
+    }
 }
 
 FILE *get_commands_batch_file() {
