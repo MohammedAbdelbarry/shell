@@ -3,7 +3,6 @@
 #include "strutil.h"
 #include <stdio.h>
 #include <string.h>
-#include <ctype.h>
 
 bool isBackground(char **argv, int argc) {
     size_t commandLen = strlen(argv[0]);
@@ -28,7 +27,7 @@ struct Command parse_command(char **command_ptr) {
         parsedCommand.error_code = NULL_ARG;
         return parsedCommand;
     }
-    char* command = *command_ptr;
+    char *command = *command_ptr;
     // pre processing
     size_t commandLen = strlen(command);
     for (unsigned int i = 0; i < commandLen; i++) {
@@ -90,7 +89,7 @@ struct Command parse_command(char **command_ptr) {
     } else if (strcmp(parsedCommand.argv[0], "history") == 0) {
         parsedCommand.type = HISTORY;
     } else if ((strcmp(parsedCommand.argv[0], "printenv") == 0) ||
-            (strcmp(parsedCommand.argv[0], "env") == 0 && parsedCommand.argc == 1)) {
+               (strcmp(parsedCommand.argv[0], "env") == 0 && parsedCommand.argc == 1)) {
         parsedCommand.type = PRINTENV;
     } else if (strcmp(parsedCommand.argv[0], "export") == 0) {
         parsedCommand.type = EXPORT;

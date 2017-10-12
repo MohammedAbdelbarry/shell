@@ -68,13 +68,13 @@ void history() {
 
 void printenv(struct Command command) {
     if (command.argc == 1) {
-        char** ptr = environ;
-        for ( ; *ptr != NULL ; ++ptr) {
+        char **ptr = environ;
+        for (; *ptr != NULL; ++ptr) {
             printf("%s\n", *ptr);
         }
     } else {
-        char** ptr = ++command.argv;
-        for (; *ptr != NULL ; ++ptr) {
+        char **ptr = ++command.argv;
+        for (; *ptr != NULL; ++ptr) {
             char *val = getenv(*ptr);
             if (val != NULL) {
                 printf("%s\n", val);

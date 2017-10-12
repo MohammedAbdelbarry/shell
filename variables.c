@@ -28,15 +28,15 @@ void set_variable(char *key, char *value, bool export) {
     }
     for (int i = 0; i < numVariables; ++i) {
         if (strcmp(variables[i].key, key) == 0) {
-            free(variables[i].value);
+            char *old_value = variables[i].value;
             variables[i].value = strdup(value);
+            free(old_value);
             found = true;
         }
     }
     if (export && !env_found) {
         setenv(key, value, true);
     } else if (!found) {
-        getenv(key) != NULL;
         variables[numVariables].key = strdup(key);
         variables[numVariables].value = strdup(value);
         numVariables++;
@@ -52,7 +52,7 @@ void print_all_variables() {
 }
 
 void destroy_all_variables() {
-    for (int i = 0 ; i < numVariables ; ++i) {
+    for (int i = 0; i < numVariables; ++i) {
         free(variables[i].key);
         free(variables[i].value);
     }

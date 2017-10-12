@@ -1,17 +1,15 @@
-#include "environment.h"
-#include "variables.h"
-#include "commands.h"
 #include "command_parser.h"
+#include "commands.h"
 #include "constants.h"
-#include "strutil.h"
+#include "environment.h"
 #include "file_processing.h"
+#include "strutil.h"
+#include "variables.h"
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/wait.h>
 #include <errno.h>
 #include <string.h>
-//#include <stdlib.h>
-//#include "strutil.h"
 
 void start(bool read_from_file);
 
@@ -24,12 +22,7 @@ int main(int argc, char *argv[]) {
     open_history_file();
     open_log_file();
     log(get_log_file(), "shell started", INFO);
-//    char *test = malloc(512);
-//    strcpy(test, "$HOME/$USER/~mohammed~");
-//    printf("%s\n", test);
-//    variable_substitution(test, false);
-//    printf("%s\n", test);
-    // any other early configuration should be here
+
     if (argc > 1) {
         if (argc > 2) {
             printf("%s: error, too many arguments\n", SHELL_NAME);
@@ -38,7 +31,7 @@ int main(int argc, char *argv[]) {
         open_commands_batch_file(argv[1]);
         if (get_commands_batch_file() == NULL) {
             printf("%s: error, batch file not found\n", SHELL_NAME);
-            return 404;
+            return -1;
         }
         start(true);
     } else {
@@ -106,10 +99,13 @@ void execute_program(struct Command command) {
         abort();
     } else if (pid > 0) {
         char buffer[512];
-        sprintf(buffer, "child %d started", pid);
+        sprintf(buffer, "child %d started: %s", pid, command.argv[0]);
         log(get_log_file(), buffer, DEBUG);
         if (!command.isBackground) {
-            wait(0);
+            int status;
+            do {
+                waitpid(pid, &status, WUNTRACED);
+            } while (!WIFEXITED(status) && !WIFSIGNALED(status));
             sprintf(buffer, "child %d done.", pid);
             log(get_log_file(), buffer, DEBUG);
         } else {
@@ -138,9 +134,11 @@ void execute_assignment(struct Command command, bool export) {
         }
     }
     if (!found && export) {
-        char* val = lookup_variable(command.argv[1]);
+        char *val = lookup_variable(command.argv[1]);
         if (val != NULL) {
+            val = strdup(val);
             set_variable(command.argv[1], val, export);
+            free(val);
         }
     }
 }
@@ -165,7 +163,7 @@ void shell_loop(bool input_from_file) {
             break;
         }
         line[strlen(line) - 1] = '\0';
-        char* orig_line = strdup(line);
+        char *orig_line = strdup(line);
         if (from_file) {
             printf("%s\n", line);
         }

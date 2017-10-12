@@ -1,8 +1,7 @@
+#include "constants.h"
+#include "variables.h"
 #include <stdlib.h>
 #include <string.h>
-#include <stdbool.h>
-#include "variables.h"
-#include "constants.h"
 #include <stdio.h>
 #include <pwd.h>
 #include <ctype.h>
@@ -77,17 +76,21 @@ char **split(const char *line, const char *tokenDelimiter, bool ignore_quotes, b
 
             case IN_DQUOTE:
                 if (ignore_quotes && ch == '"') {
-                    *ptr = '\0';
-                    argv[argc++] = word_start;
-                    state = IN_DELIM;
+//                    *ptr = '\0';
+//                    argv[argc++] = word_start;
+                    memmove(ptr, ptr + 1, strlen(ptr));
+                    ptr--;
+                    state = IN_WORD;
                 }
                 continue;
 
             case IN_SQUOTE:
                 if (ignore_quotes && ch == '\'') {
-                    *ptr = '\0';
-                    argv[argc++] = word_start;
-                    state = IN_DELIM;
+//                    *ptr = '\0';
+//                    argv[argc++] = word_start;
+                    memmove(ptr, ptr + 1, strlen(ptr));
+                    ptr--;
+                    state = IN_WORD;
                 }
                 break;
 
@@ -98,9 +101,13 @@ char **split(const char *line, const char *tokenDelimiter, bool ignore_quotes, b
                     state = IN_DELIM;
                 }
                 if (!allow_quotes_in_words && ignore_quotes && ch == '"') {
+                    memmove(ptr, ptr + 1, strlen(ptr));
+                    ptr--;
                     state = IN_DQUOTE;
                     continue;
                 } else if (!allow_quotes_in_words && ignore_quotes && ch == '\'') {
+                    memmove(ptr, ptr + 1, strlen(ptr));
+                    ptr--;
                     state = IN_SQUOTE;
                     continue;
                 }
@@ -148,14 +155,14 @@ int variable_substitution(const char **line_ptr, bool ignore_squotes) {
     enum states {
         IN_VARIABLE, IN_OTHER, IN_SQUOTE, IN_TILDE
     } state = IN_OTHER;
-    if (line_ptr == NULL || &line_ptr == NULL) {
+    if (line_ptr == NULL || *line_ptr == NULL) {
         return NULL_ARG;
     }
     char *word_start = NULL;
     bool finished = false;
     int size = BUF_SIZE;
-    char* line = *line_ptr;
-    for (char *ptr = line; ; ptr++) {
+    char *line = *line_ptr;
+    for (char *ptr = line;; ptr++) {
         char ch = (unsigned char) *ptr;
         if (finished) {
             break;
@@ -217,6 +224,8 @@ int variable_substitution(const char **line_ptr, bool ignore_squotes) {
                     } else if (ch == '~') {
                         state = IN_TILDE;
                         word_start = ptr + 1;
+                    } else if (ch == '\'') {
+                        state = IN_SQUOTE;
                     } else {
                         state = IN_OTHER;
                     }
@@ -237,7 +246,7 @@ int variable_substitution(const char **line_ptr, bool ignore_squotes) {
                             printf("%s: no such user or named directory: %s\n", SHELL_NAME, query);
                             return NULL_USER;
                         }
-                        rep = result -> pw_dir;
+                        rep = result->pw_dir;
                     }
                     int offset = strlen(rep) - (ptr - word_start) - 1;
                     if (strlen(line) + offset >= size) {
@@ -281,34 +290,34 @@ char **shellSplit(char *line) {
     return argv;
 }
 
-char **splitAssignment (char *command) {
-    if (command == NULL) {
-        return NULL;
-    }
-    char **argv = (char**) malloc(2 * sizeof(char *));
-    size_t commandLen = strlen(command);
-    enum states {
-        IN_VARIABLE, IN_OTHER, IN_VAL
-    } state = IN_OTHER;
-    argv[0] = command;
-    for (int i = 0; i < commandLen; i++) {
-        switch (state) {
-            case IN_OTHER:
-                if (isalpha(command[i])) {
-                    state = IN_VARIABLE;
-                }
-                break;
-            case IN_VARIABLE:
-                if (command[i] == '=') {
-                    command[i] = '\0';
-                    argv[1] = command + i + 1;
-                    return argv;
-                }
-                break;
-        }
-    }
-    return argv;
-}
+//char **splitAssignment(char *command) {
+//    if (command == NULL) {
+//        return NULL;
+//    }
+//    char **argv = (char **) malloc(2 * sizeof(char *));
+//    size_t commandLen = strlen(command);
+//    enum states {
+//        IN_VARIABLE, IN_OTHER, IN_VAL
+//    } state = IN_OTHER;
+//    argv[0] = command;
+//    for (int i = 0; i < commandLen; i++) {
+//        switch (state) {
+//            case IN_OTHER:
+//                if (isalpha(command[i])) {
+//                    state = IN_VARIABLE;
+//                }
+//                break;
+//            case IN_VARIABLE:
+//                if (command[i] == '=') {
+//                    command[i] = '\0';
+//                    argv[1] = command + i + 1;
+//                    return argv;
+//                }
+//                break;
+//        }
+//    }
+//    return argv;
+//}
 
 bool isAssignment(char *command) {
     if (command == NULL) {
